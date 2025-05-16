@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Tracker - JEE Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> 
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Tailwind slate-100 */
+            color: #334155; /* Tailwind slate-700 */
+        }
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            transform: scale(0.95);
+        }
+        .modal:not(.hidden) {
+            transform: scale(1);
+        }
+        .modal.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .progress-bar-bg {
+            background-color: #e2e8f0; /* Tailwind slate-200 */
+        }
+        .progress-bar-fill {
+            transition: width 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bouncy transition */
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0; /* slate-200 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* slate-400 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+
+        /* Styles for the share summary card */
+        .summary-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); /* Subtle gradient */
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+            padding: 28px;
+            width: 100%;
+            max-width: 450px; 
+            border: 1px solid #e2e8f0; /* slate-200 */
+        }
+        .summary-card-header {
+            border-bottom: 1px solid #cbd5e1; /* slate-300 */
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .summary-card-footer {
+            border-top: 1px solid #cbd5e1; /* slate-300 */
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        /* Easter egg message style */
+        .easter-egg-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fbbf24; /* amber-400 */
+            color: #422006; /* amber-900 */
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-weight: 500;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            opacity: 0;
+        }
+        .easter-egg-message.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Enhanced button styles */
+        .btn {
+            transition: all 0.2s ease-in-out;
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.625rem 1.25rem; /* py-2.5 px-5 */
+            font-weight: 600; /* semibold */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0284c7; /* sky-600 */
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #334155; /* slate-700 */
+            border: 1px solid #cbd5e1; /* slate-300 */
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1; /* slate-300 */
+        }
+        .btn-accent {
+            background-color: #f59e0b; /* amber-500 */
+            color: white;
+        }
+        .btn-accent:hover {
+            background-color: #d97706; /* amber-600 */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* red-600 */
+        }
+        
+        /* Image Easter Egg Modal Style */
+        #imageEasterEggModal .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        #easterEggImageEl { 
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl"> 
+        <header class="mb-8 text-center">
+            <h1 id="mainTitle" class="text-4xl md:text-5xl font-extrabold text-slate-800 cursor-pointer">Study Time Tracker</h1>
+            <p class="text-lg text-sky-600 font-medium mt-1">Your JEE Prep Companion</p>
+            <div id="netTimeTodayContainer" class="mt-4">
+                 <span id="netTimeTodayDisplay" class="text-5xl md:text-6xl font-bold text-sky-500 tracking-wider">00:00:00</span>
+            </div>
+            <button id="openShareSummaryBtn" class="btn btn-accent mt-6">
+                <i class="fas fa-share-nodes mr-2"></i>Share Today's Summary
+            </button>
+        </header>
+
+        <div id="subjectsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            </div>
+    </div>
+
+    <div id="setGoalModal" class="modal hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4 z-40">
+        <div class="bg-white p-7 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-2xl font-semibold text-slate-700">Set Daily Goal for <span id="setGoalSubjectName" class="font-bold"></span></h2>
+                <button onclick="closeModal('setGoalModal')" class="text-slate-400 hover:text-slate-600 text-3xl">&times;</button>
+            </div>
+            <form id="setGoalForm">
+                <input type="hidden" id="setGoalSubjectId">
+                <div class="mb-6">
+                    <label for="dailyGoalHours" class="block text-sm font-medium text-slate-600 mb-1">Daily Goal (Hours)</label>
+                    <input type="number" id="dailyGoalHours" name="dailyGoalHours" min="0" step="0.1" value="1" class="mt-1 block w-full px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('setGoalModal')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary bg-green-500 hover:bg-green-600">Set Goal</button> 
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="shareSummaryModal" class="modal hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4 z-50">
+        <div class="summary-card relative">
+            <button onclick="closeModal('shareSummaryModal')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-3xl">&times;</button>
+            <div class="summary-card-header text-center">
+                <h2 class="text-3xl font-bold text-slate-800">Today's Study Summary</h2>
+                <p id="summaryDate" class="text-sm text-slate-500 mt-1"></p>
+            </div>
+            <div id="shareSummaryContent" class="space-y-4">
+                </div>
+            <div class="summary-card-footer text-center mt-5">
+                <p class="text-xl font-semibold text-slate-700">Total Time Today: <span id="summaryNetTime" class="font-bold text-sky-600"></span></p>
+                <p class="text-sm text-slate-500 mt-3">Fueling your JEE Dreams! <i class="fas fa-rocket text-sky-500"></i></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="easterEggMessage" class="easter-egg-message"></div>
+
+    <div id="imageEasterEggModal" class="modal hidden fixed inset-0 bg-slate-900 bg-opacity-70 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center p-4 z-[60]">
+        <div class="modal-content relative">
+            <button onclick="closeModal('imageEasterEggModal')" class="absolute top-2 right-3 text-slate-500 hover:text-slate-700 text-4xl font-light">&times;</button>
+            <img id="easterEggImageEl" src="" alt="Easter Egg Image" class="mt-2"/> 
+            <p class="text-sm text-slate-600 mt-2">Keep that focus!</p>
+        </div>
+    </div>
+
+    <footer class="text-center py-8 mt-10 border-t border-slate-200">
+        <p class="text-sm text-slate-500">&copy; <span id="currentYear"></span> Study Tracker - JEE Edition.</p>
+        <p class="text-xs text-slate-400 mt-1">
+            Made by Shaurya Pratap Singh 
+            <a href="https://github.com/svalordev" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:text-sky-600 hover:underline">
+                (<i class="fab fa-github"></i> svalordev)
+            </a>
+        </p>
+    </footer>
+
+    <script>
+        // --- Application State and Data ---
+        const APP_DATA_STORAGE_KEY = 'studyTrackerData_v4_jee'; 
+        const ACTIVE_TIMER_STORAGE_KEY = 'studyTrackerActiveTimer_v4_jee';
+
+        let appData = {
+            subjects: [
+                { id: 'physics', name: 'Physics', color: 'sky', goal: 60, loggedTime: [] }, 
+                { id: 'chemistry', name: 'Chemistry', color: 'emerald', goal: 60, loggedTime: [] },
+                { id: 'maths', name: 'Maths', color: 'violet', goal: 60, loggedTime: [] }
+            ]
+        };
+
+        let activeTimer = {
+            subjectId: null, startTime: null, intervalId: null, display: "00:00:00"
+        };
+
+        // --- DOM Elements ---
+        const subjectsContainer = document.getElementById('subjectsContainer');
+        const setGoalModal = document.getElementById('setGoalModal');
+        const setGoalForm = document.getElementById('setGoalForm');
+        const setGoalSubjectName = document.getElementById('setGoalSubjectName');
+        const setGoalSubjectIdInput = document.getElementById('setGoalSubjectId');
+        const dailyGoalHoursInput = document.getElementById('dailyGoalHours');
+        const netTimeTodayDisplay = document.getElementById('netTimeTodayDisplay');
+        const openShareSummaryBtn = document.getElementById('openShareSummaryBtn');
+        const shareSummaryModal = document.getElementById('shareSummaryModal');
+        const shareSummaryContent = document.getElementById('shareSummaryContent');
+        const summaryDateElement = document.getElementById('summaryDate');
+        const summaryNetTimeElement = document.getElementById('summaryNetTime');
+        const mainTitle = document.getElementById('mainTitle'); 
+        const easterEggMessageDiv = document.getElementById('easterEggMessage');
+        const imageEasterEggModal = document.getElementById('imageEasterEggModal'); 
+        const easterEggImageEl = document.getElementById('easterEggImageEl'); 
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // --- Color Themes for Subjects (Tailwind v3 classes) ---
+        const subjectThemes = {
+            physics: { name: 'Physics', baseColor: 'sky', icon: 'fas fa-atom', textColor: 'text-sky-600', bgColor: 'bg-sky-500', lightBgColor: 'bg-sky-100', borderColor: 'border-sky-300', ringColor: 'focus:ring-sky-500', buttonBg: 'bg-sky-500', buttonHoverBg: 'hover:bg-sky-600' },
+            chemistry: { name: 'Chemistry', baseColor: 'emerald', icon: 'fas fa-flask-vial', textColor: 'text-emerald-600', bgColor: 'bg-emerald-500', lightBgColor: 'bg-emerald-100', borderColor: 'border-emerald-300', ringColor: 'focus:ring-emerald-500', buttonBg: 'bg-emerald-500', buttonHoverBg: 'hover:bg-emerald-600' },
+            maths: { name: 'Maths', baseColor: 'violet', icon: 'fas fa-calculator', textColor: 'text-violet-600', bgColor: 'bg-violet-500', lightBgColor: 'bg-violet-100', borderColor: 'border-violet-300', ringColor: 'focus:ring-violet-500', buttonBg: 'bg-violet-500', buttonHoverBg: 'hover:bg-violet-600' }
+        };
+         appData.subjects.forEach(s => { 
+            if (s.color === 'blue') s.color = 'sky';
+            if (s.color === 'green') s.color = 'emerald';
+            if (s.color === 'purple') s.color = 'violet';
+        });
+
+
+        // --- Utility Functions ---
+        function loadData() {
+            try {
+                const storedAppData = localStorage.getItem(APP_DATA_STORAGE_KEY);
+                if (storedAppData) {
+                    appData = JSON.parse(storedAppData);
+                    appData.subjects = appData.subjects.map(s => ({
+                        id: s.id,
+                        name: s.name || subjectThemes[s.id]?.name || 'Unknown Subject',
+                        color: subjectThemes[s.id] ? s.color : 'sky',
+                        goal: (s.goal === undefined || s.goal === 0 || isNaN(Number(s.goal))) ? 60 : Number(s.goal),
+                        loggedTime: Array.isArray(s.loggedTime) ? s.loggedTime : []
+                    }));
+                    appData.subjects.forEach(s => {
+                        if (s.color === 'blue') s.color = 'sky';
+                        if (s.color === 'green') s.color = 'emerald';
+                        if (s.color === 'purple') s.color = 'violet';
+                     });
+
+                } else {
+                    saveAppData(); 
+                }
+            } catch (e) {
+                console.error("Error parsing appData from localStorage. Resetting to defaults.", e);
+                appData = {
+                    subjects: [
+                        { id: 'physics', name: 'Physics', color: 'sky', goal: 60, loggedTime: [] }, 
+                        { id: 'chemistry', name: 'Chemistry', color: 'emerald', goal: 60, loggedTime: [] },
+                        { id: 'maths', name: 'Maths', color: 'violet', goal: 60, loggedTime: [] }
+                    ]
+                };
+                saveAppData();
+            }
+
+            try {
+                const storedTimerState = localStorage.getItem(ACTIVE_TIMER_STORAGE_KEY);
+                if (storedTimerState) {
+                    const parsedTimerState = JSON.parse(storedTimerState);
+                    if (parsedTimerState && parsedTimerState.subjectId && parsedTimerState.startTime) {
+                        activeTimer.subjectId = parsedTimerState.subjectId;
+                        activeTimer.startTime = Number(parsedTimerState.startTime); 
+
+                        if (!isNaN(activeTimer.startTime) && activeTimer.startTime > 0) {
+                            startTimerInterval(activeTimer.subjectId, true);
+                        } else {
+                            console.warn("Corrupted startTime in localStorage, clearing active timer state.");
+                            activeTimer = { subjectId: null, startTime: null, intervalId: null, display: "00:00:00" };
+                            saveActiveTimerState();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Error parsing activeTimerState from localStorage. Resetting timer state.", e);
+                activeTimer = { subjectId: null, startTime: null, intervalId: null, display: "00:00:00" };
+                saveActiveTimerState();
+            }
+        }
+
+
+        function saveAppData() {
+            localStorage.setItem(APP_DATA_STORAGE_KEY, JSON.stringify(appData));
+        }
+
+        function saveActiveTimerState() {
+            localStorage.setItem(ACTIVE_TIMER_STORAGE_KEY, JSON.stringify({
+                subjectId: activeTimer.subjectId,
+                startTime: activeTimer.startTime 
+            }));
+        }
+
+        function formatTime(totalMinutes) {
+            if (totalMinutes < 1) return "0m"; 
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = Math.round(totalMinutes % 60); 
+            let result = "";
+            if (hours > 0) result += `${hours}h `;
+            if (minutes > 0 || hours === 0) result += `${minutes}m`;
+            return result.trim() || "0m";
+        }
+
+        function formatMinutesToHHMMSS(totalMinutes) {
+            if (totalMinutes <= 0) return "00:00:00";
+            const totalSeconds = Math.round(totalMinutes * 60); 
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function formatTimerDisplay(ms) {
+            if (ms <= 0) return "00:00:00";
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function getDailyStudiedMinutes(subjectId) {
+            const subject = appData.subjects.find(s => s.id === subjectId);
+            if (!subject) return 0;
+            const todayStr = new Date().toISOString().slice(0, 10);
+            return subject.loggedTime.reduce((total, log) => {
+                if (log.date === todayStr) return total + log.duration;
+                return total;
+            }, 0);
+        }
+
+        function getNetTimeStudiedToday() {
+            let totalMinutesToday = 0;
+            const todayStr = new Date().toISOString().slice(0, 10);
+            appData.subjects.forEach(subject => {
+                subject.loggedTime.forEach(log => {
+                    if (log.date === todayStr) totalMinutesToday += log.duration;
+                });
+            });
+            return totalMinutesToday;
+        }
+        
+        function showCustomMessage(text, type = 'success') {
+            easterEggMessageDiv.textContent = text;
+            easterEggMessageDiv.className = 'easter-egg-message'; 
+            if (type === 'success') {
+                easterEggMessageDiv.classList.add('bg-emerald-500', 'text-white');
+            } else if (type === 'error') {
+                easterEggMessageDiv.classList.add('bg-red-500', 'text-white');
+            } else { 
+                easterEggMessageDiv.classList.add('bg-amber-400', 'text-amber-900');
+            }
+            easterEggMessageDiv.classList.add('show');
+            setTimeout(() => {
+                easterEggMessageDiv.classList.remove('show');
+            }, 3000);
+        }
+
+
+        // --- Rendering Functions ---
+        function renderNetTimeToday() {
+            if (netTimeTodayDisplay) {
+                const totalMinutes = getNetTimeStudiedToday();
+                netTimeTodayDisplay.textContent = formatMinutesToHHMMSS(totalMinutes); 
+            }
+        }
+
+        function renderSubjectCards() {
+            subjectsContainer.innerHTML = ''; 
+            appData.subjects.forEach(subject => {
+                const theme = subjectThemes[subject.id] || subjectThemes.physics; 
+                const dailyMinutesStudied = getDailyStudiedMinutes(subject.id);
+                const goalMinutes = subject.goal;
+                const progressPercent = goalMinutes > 0 ? Math.min((dailyMinutesStudied / goalMinutes) * 100, 100) : 0;
+
+                const card = document.createElement('div');
+                card.className = `bg-white p-5 rounded-xl shadow-lg border border-slate-200 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:border-slate-300`;
+                
+                const isThisTimerActive = activeTimer.subjectId === subject.id;
+                const timerDisplayValue = isThisTimerActive ? activeTimer.display : "00:00:00";
+                const isAnotherTimerActive = activeTimer.subjectId !== null && activeTimer.subjectId !== subject.id;
+
+                card.innerHTML = `
+                    <div>
+                        <h3 class="text-2xl font-bold ${theme.textColor} mb-3 flex items-center"><i class="${theme.icon} mr-3 text-2xl opacity-80"></i>${theme.name}</h3>
+                        <p class="text-sm text-slate-500 mb-1">
+                            Daily Goal: <span class="font-semibold ${theme.textColor}">${formatTime(goalMinutes)}</span>
+                        </p>
+                        <p class="text-sm text-slate-500 mb-4">
+                            Studied Today: <span class="font-semibold ${theme.textColor}">${formatTime(dailyMinutesStudied)}</span>
+                        </p>
+                        <div class="w-full progress-bar-bg rounded-full h-3 mb-1">
+                            <div class="progress-bar-fill h-3 rounded-full ${theme.bgColor}" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <p class="text-xs text-slate-400 text-right mb-5">${Math.round(progressPercent)}% Complete</p>
+                        <div class="text-3xl font-semibold ${theme.textColor} my-4 text-center tracking-wider" id="timerDisplay-${subject.id}">
+                            ${timerDisplayValue}
+                        </div>
+                    </div>
+                    <div class="mt-auto grid grid-cols-2 gap-3">
+                        ${
+                            isThisTimerActive
+                            ? `<button onclick="stopTimer('${subject.id}')" class="btn btn-danger w-full col-span-2">
+                                    <i class="fas fa-stop-circle mr-2"></i>Stop Timer
+                                </button>`
+                            : `<button onclick="startTimer('${subject.id}')" class="btn btn-primary ${theme.buttonBg} ${theme.buttonHoverBg} w-full col-span-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        ${isAnotherTimerActive ? 'disabled' : ''}>
+                                    <i class="fas fa-play-circle mr-2"></i>Start Timer
+                                </button>`
+                        }
+                        <button onclick="openSetGoalModal('${subject.id}')" 
+                                class="btn btn-secondary w-full col-span-2 mt-2">
+                            <i class="fas fa-bullseye mr-2"></i>Set Goal
+                        </button>
+                    </div>
+                `;
+                subjectsContainer.appendChild(card);
+            });
+            renderNetTimeToday();
+        }
+
+        // --- Timer Functions ---
+        window.startTimer = function(subjectId) {
+            if (activeTimer.intervalId) {
+                showCustomMessage("Another timer is already active. Stop it first.", "error");
+                return;
+            }
+            activeTimer.subjectId = subjectId;
+            activeTimer.startTime = Date.now();
+            activeTimer.display = "00:00:00"; 
+            startTimerInterval(subjectId);
+            saveActiveTimerState();
+            renderSubjectCards(); 
+        }
+
+        function startTimerInterval(currentSubjectId, isResuming = false) {
+            if (activeTimer.intervalId) {
+                clearInterval(activeTimer.intervalId);
+            }
+
+            activeTimer.intervalId = setInterval(() => {
+                if (!activeTimer.startTime || isNaN(activeTimer.startTime) || activeTimer.startTime <=0 ) { 
+                     console.error("Timer interval: Invalid startTime for", currentSubjectId, "startTime:", activeTimer.startTime);
+                     stopTimer(currentSubjectId, true); 
+                     return;
+                }
+
+                const elapsedMs = Date.now() - activeTimer.startTime;
+                if (elapsedMs < 0) { 
+                    console.warn("Elapsed milliseconds is negative for " + currentSubjectId + ". startTime might be in the future or system clock changed.", "elapsedMs:", elapsedMs, "startTime:", activeTimer.startTime);
+                    activeTimer.display = "00:00:00"; 
+                } else {
+                    activeTimer.display = formatTimerDisplay(elapsedMs);
+                }
+                
+                const timerDisplayElement = document.getElementById(`timerDisplay-${currentSubjectId}`);
+                if (timerDisplayElement) {
+                    timerDisplayElement.textContent = activeTimer.display;
+                } else {
+                    console.warn(`Timer display element 'timerDisplay-${currentSubjectId}' not found during interval update.`);
+                }
+            }, 1000);
+        }
+
+
+        window.stopTimer = function(subjectId, silentStop = false) {
+            if (activeTimer.subjectId !== subjectId) {
+                console.warn(`stopTimer called for ${subjectId}, but active timer is for ${activeTimer.subjectId || 'none'}.`);
+                if(activeTimer.intervalId) clearInterval(activeTimer.intervalId);
+                if(!activeTimer.subjectId && activeTimer.intervalId) activeTimer.intervalId = null;
+                return; 
+            }
+            if (!activeTimer.intervalId && !silentStop) { 
+                console.warn(`stopTimer called for ${subjectId}, but no active intervalId found.`);
+            }
+
+            if(activeTimer.intervalId) clearInterval(activeTimer.intervalId);
+            const elapsedMs = activeTimer.startTime ? (Date.now() - activeTimer.startTime) : 0;
+            
+            if (!silentStop) {
+                const totalMinutes = Math.floor(elapsedMs / (1000 * 60)); 
+                const subjectInfo = appData.subjects.find(s => s.id === subjectId);
+                if (subjectInfo) { 
+                    if (totalMinutes > 0) {
+                        const today = new Date().toISOString().slice(0, 10);
+                        subjectInfo.loggedTime.push({ date: today, duration: totalMinutes });
+                        saveAppData(); 
+                        showCustomMessage(`${formatTime(totalMinutes)} logged for ${subjectInfo.name}!`, 'success');
+                    } else {
+                         showCustomMessage(`Timer stopped. No full minute logged for ${subjectInfo.name}.`, 'success');
+                    }
+                } else {
+                    console.error(`Could not find subject with ID ${subjectId} to log time.`);
+                }
+            }
+            activeTimer = { subjectId: null, startTime: null, intervalId: null, display: "00:00:00" };
+            saveActiveTimerState();
+            renderSubjectCards();
+        }
+
+        // --- Modal Handling ---
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                if (modalId === 'shareSummaryModal') renderShareSummaryContent();
+                if (modalId === 'setGoalModal') {
+                     const subjectId = setGoalSubjectIdInput.value;
+                     const subject = appData.subjects.find(s => s.id === subjectId);
+                     const theme = subject ? subjectThemes[subject.id] : null;
+                     if (theme) {
+                        setGoalSubjectName.textContent = theme.name;
+                        setGoalSubjectName.className = `font-bold ${theme.textColor}`;
+                     } else if (subject) {
+                        setGoalSubjectName.textContent = subject.name; 
+                        setGoalSubjectName.className = `font-bold text-slate-700`;
+                     }
+                }
+            }
+        }
+
+        window.closeModal = function(modalId) { 
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        window.openSetGoalModal = function(subjectId) {
+            const subject = appData.subjects.find(s => s.id === subjectId);
+            if (!subject) return;
+            setGoalSubjectIdInput.value = subjectId; 
+            dailyGoalHoursInput.value = subject.goal > 0 ? (subject.goal / 60).toFixed(1) : 1; 
+            openModal('setGoalModal'); 
+            dailyGoalHoursInput.focus();
+        }
+
+        function renderShareSummaryContent() {
+            const today = new Date();
+            summaryDateElement.textContent = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            shareSummaryContent.innerHTML = ''; 
+
+            appData.subjects.forEach(subjectData => {
+                const theme = subjectThemes[subjectData.id] || subjectThemes.physics; 
+                const minutesStudied = getDailyStudiedMinutes(subjectData.id);
+
+                const subjectDiv = document.createElement('div');
+                subjectDiv.className = `flex items-center justify-between py-3 px-4 ${theme.lightBgColor} rounded-lg border ${theme.borderColor}`;
+                subjectDiv.innerHTML = `
+                    <span class="flex items-center">
+                        <i class="${theme.icon} ${theme.textColor} mr-3 text-xl"></i>
+                        <span class="font-semibold text-slate-700 text-lg">${theme.name}</span>
+                    </span>
+                    <span class="font-bold text-lg ${minutesStudied > 0 ? theme.textColor : 'text-slate-500'}">${formatTime(minutesStudied)}</span>
+                `;
+                shareSummaryContent.appendChild(subjectDiv);
+            });
+            summaryNetTimeElement.textContent = formatTime(getNetTimeStudiedToday()); 
+            summaryNetTimeElement.className = `font-extrabold text-2xl ${getNetTimeStudiedToday() > 0 ? 'text-sky-600' : 'text-slate-500'}`;
+        }
+        
+        // --- Event Listeners & Easter Eggs ---
+        setGoalForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const subjectId = setGoalSubjectIdInput.value;
+            const goalHours = parseFloat(dailyGoalHoursInput.value);
+
+            if (isNaN(goalHours) || goalHours < 0) {
+                showCustomMessage("Please enter a valid non-negative number for the daily goal.", "error");
+                return;
+            }
+            const subject = appData.subjects.find(s => s.id === subjectId);
+            const themeName = subject ? (subjectThemes[subject.id]?.name || subject.name) : "Subject";
+            if (subject) {
+                subject.goal = Math.round(goalHours * 60);
+                saveAppData();
+                renderSubjectCards();
+                closeModal('setGoalModal');
+                showCustomMessage(`Daily goal for ${themeName} set to ${formatTime(subject.goal)}.`, 'success');
+            } else {
+                showCustomMessage("Error: Subject not found setting goal.", "error");
+            }
+        });
+        
+        openShareSummaryBtn.addEventListener('click', () => openModal('shareSummaryModal'));
+
+        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+        
+        function showImageEasterEgg() {
+            if (easterEggImageEl) { 
+                easterEggImageEl.src = `https://memes.co.in/Uploads/Media/Jan24/Wed31/1031/a3f49a13.jpg`; 
+                openModal('imageEasterEggModal');
+                setTimeout(() => {
+                    closeModal('imageEasterEggModal');
+                }, 3500); 
+            } else {
+                console.error("easterEggImageEl not found for image easter egg.");
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return; 
+
+            if (event.key.toLowerCase() === konamiCode[konamiIndex].toLowerCase()) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    showCustomMessage('🚀 To the IITs! Keep pushing! 🚀', 'easter');
+                    konamiIndex = 0; 
+                }
+            } else if (event.key.length === 1 || event.key.startsWith("Arrow")) { 
+                konamiIndex = 0; 
+            }
+
+            if (event.key === 'Escape') {
+                if (!setGoalModal.classList.contains('hidden')) closeModal('setGoalModal');
+                if (!shareSummaryModal.classList.contains('hidden')) closeModal('shareSummaryModal');
+                if (!imageEasterEggModal.classList.contains('hidden')) closeModal('imageEasterEggModal'); 
+            }
+        });
+        
+        // --- Initialization ---
+        function initializeApp() {
+            loadData(); 
+            renderSubjectCards();
+
+            let titleClickCount = 0;
+            if (mainTitle) { 
+                mainTitle.addEventListener('click', () => {
+                    titleClickCount++;
+                    if (titleClickCount === 3) { 
+                        showImageEasterEgg();    
+                        titleClickCount = 0;     
+                    }
+                });
+            } else {
+                console.error("mainTitle element not found, title click easter egg will not work.");
+            }
+        }
+        
+        console.log("Hey there, future engineer/scientist! 👋 Keep up the hard work. Your dedication is inspiring!");
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+</body>
+</html>
