@@ -3,691 +3,604 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Tracker - JEE Edition</title>
+    <title>JEE Exam Countdown - Customizable</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> 
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9; /* Tailwind slate-100 */
-            color: #334155; /* Tailwind slate-700 */
+            /* More dynamic gradient background */
+            background: linear-gradient(135deg, #0f172a, #1e293b, #334155, #475569);
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite alternate; /* Slower, more flowing animation */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column; /* Allow content to stack vertically */
+            align-items: center;
+            justify-content: center;
+            color: #e2e8f0; /* Light gray text */
+            /* Removed overflow: hidden; to enable scrolling */
+            position: relative; /* For pseudo-elements */
+            padding-bottom: 4rem; /* Add some padding at the bottom for scrollability */
         }
-        .modal {
-            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-            transform: scale(0.95);
+
+        /* Background particle-like effect using pseudo-elements */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+            animation: pulseParticles 15s infinite alternate;
+            pointer-events: none; /* Allow clicks to pass through */
+            z-index: -1; /* Behind content */
         }
-        .modal:not(.hidden) {
-            transform: scale(1);
+
+        body::after {
+            background: radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 30% 70%, rgba(251, 191, 36, 0.15) 0%, transparent 50%);
+            animation: pulseParticles 18s infinite alternate-reverse;
         }
-        .modal.hidden {
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        @keyframes pulseParticles {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        .countdown-box {
+            background-color: rgba(255, 255, 255, 0.08); /* Semi-transparent white */
+            backdrop-filter: blur(15px); /* Stronger frosted glass effect */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* More prominent subtle border */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4); /* Deeper, more diffused shadow */
+            transition: transform 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+            position: relative;
+            overflow: hidden; /* For inner glow */
+        }
+
+        .countdown-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: rotate(0deg);
+            animation: rotateGlow 10s linear infinite;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .countdown-box:hover {
+            transform: translateY(-8px) scale(1.02); /* More pronounced lift and slight scale */
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* Even deeper shadow on hover */
+        }
+
+        .countdown-value {
+            color: #6ee7b7; /* Brighter teal for numbers */
+            text-shadow: 0 0 12px rgba(110, 231, 183, 0.8), 0 0 20px rgba(110, 231, 183, 0.4); /* Stronger glow */
+            font-weight: 900; /* Extra bold */
+            letter-spacing: -0.05em; /* Tighter letter spacing for impact */
+            /* Add pulse animation for value changes */
+            animation: pulseValue 0.3s ease-out;
+        }
+
+        @keyframes pulseValue {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .countdown-label {
+            color: #cbd5e1; /* Slightly brighter gray for labels */
+            font-weight: 400;
+        }
+
+        /* Text gradient animation for title */
+        .animated-title {
+            background-size: 200% auto;
+            animation: textGradient 3s linear infinite alternate;
+        }
+
+        @keyframes textGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* Motivational/Tip Box styles */
+        .tip-box {
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-style: italic;
+            color: #a0aec0;
+            text-align: center;
+            opacity: 0; /* Start hidden for fade-in */
+            transition: opacity 1s ease-in-out;
+        }
+
+        .tip-box.fade-in {
+            opacity: 1;
+        }
+
+        /* Progress Bar styles */
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 9999px; /* Full rounded corners */
+            overflow: hidden;
+            margin-top: 1.5rem; /* Space from countdown numbers */
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%; /* Initial width */
+            background: linear-gradient(90deg, #8b5cf6, #ec4899); /* Purple to pink gradient */
+            border-radius: 9999px;
+            transition: width 0.5s ease-out; /* Smooth transition for width changes */
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
             opacity: 0;
             visibility: hidden;
-        }
-        .progress-bar-bg {
-            background-color: #e2e8f0; /* Tailwind slate-200 */
-        }
-        .progress-bar-fill {
-            transition: width 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bouncy transition */
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #e2e8f0; /* slate-200 */
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #94a3b8; /* slate-400 */
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; /* slate-500 */
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
 
-        /* Styles for the share summary card */
-        .summary-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); /* Subtle gradient */
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
-            padding: 28px;
-            width: 100%;
-            max-width: 450px; 
-            border: 1px solid #e2e8f0; /* slate-200 */
-        }
-        .summary-card-header {
-            border-bottom: 1px solid #cbd5e1; /* slate-300 */
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-        }
-        .summary-card-footer {
-            border-top: 1px solid #cbd5e1; /* slate-300 */
-            padding-top: 20px;
-            margin-top: 20px;
-        }
-
-        /* Easter egg message style */
-        .easter-egg-message {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #fbbf24; /* amber-400 */
-            color: #422006; /* amber-900 */
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            z-index: 1000;
-            font-weight: 500;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-            opacity: 0;
-        }
-        .easter-egg-message.show {
+        .modal-overlay.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-        
-        /* Enhanced button styles */
-        .btn {
-            transition: all 0.2s ease-in-out;
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 0.625rem 1.25rem; /* py-2.5 px-5 */
-            font-weight: 600; /* semibold */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .btn-primary {
-            background-color: #0ea5e9; /* sky-500 */
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #0284c7; /* sky-600 */
-        }
-        .btn-secondary {
-            background-color: #e2e8f0; /* slate-200 */
-            color: #334155; /* slate-700 */
-            border: 1px solid #cbd5e1; /* slate-300 */
-        }
-        .btn-secondary:hover {
-            background-color: #cbd5e1; /* slate-300 */
-        }
-        .btn-accent {
-            background-color: #f59e0b; /* amber-500 */
-            color: white;
-        }
-        .btn-accent:hover {
-            background-color: #d97706; /* amber-600 */
-        }
-        .btn-danger {
-            background-color: #ef4444; /* red-500 */
-            color: white;
-        }
-        .btn-danger:hover {
-            background-color: #dc2626; /* red-600 */
-        }
-        
-        /* Image Easter Egg Modal Style */
-        #imageEasterEggModal .modal-content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-        #easterEggImageEl { 
-            max-width: 100%;
-            max-height: 70vh;
-            border-radius: 8px;
-            margin-top: 10px;
+            visibility: visible;
         }
 
+        .modal-content {
+            background-color: #1e293b; /* Darker background for modal */
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #cbd5e1;
+            cursor: pointer;
+        }
+
+        /* Remove button */
+        .remove-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: rgba(239, 68, 68, 0.8); /* Red */
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            opacity: 1;
+        }
     </style>
 </head>
-<body class="antialiased">
-    <div class="container mx-auto p-4 md:p-8 max-w-4xl"> 
-        <header class="mb-8 text-center">
-            <h1 id="mainTitle" class="text-4xl md:text-5xl font-extrabold text-slate-800 cursor-pointer">Study Time Tracker</h1>
-            <p class="text-lg text-sky-600 font-medium mt-1">Your JEE Prep Companion</p>
-            <div id="netTimeTodayContainer" class="mt-4">
-                 <span id="netTimeTodayDisplay" class="text-5xl md:text-6xl font-bold text-sky-500 tracking-wider">00:00:00</span>
-            </div>
-            <button id="openShareSummaryBtn" class="btn btn-accent mt-6">
-                <i class="fas fa-share-nodes mr-2"></i>Share Today's Summary
-            </button>
-        </header>
+<body class="p-4">
+    <div class="flex flex-col items-center justify-center min-h-screen w-full max-w-7xl mx-auto py-8 px-4">
+        <!-- Main Title -->
+        <h1 class="text-6xl md:text-8xl font-extrabold text-center mb-10 leading-tight tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-600 animated-title">
+            Unleash Your Potential!
+        </h1>
 
-        <div id="subjectsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            </div>
-    </div>
-
-    <div id="setGoalModal" class="modal hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4 z-40">
-        <div class="bg-white p-7 rounded-xl shadow-2xl w-full max-w-md">
-            <div class="flex justify-between items-center mb-5">
-                <h2 class="text-2xl font-semibold text-slate-700">Set Daily Goal for <span id="setGoalSubjectName" class="font-bold"></span></h2>
-                <button onclick="closeModal('setGoalModal')" class="text-slate-400 hover:text-slate-600 text-3xl">&times;</button>
-            </div>
-            <form id="setGoalForm">
-                <input type="hidden" id="setGoalSubjectId">
-                <div class="mb-6">
-                    <label for="dailyGoalHours" class="block text-sm font-medium text-slate-600 mb-1">Daily Goal (Hours)</label>
-                    <input type="number" id="dailyGoalHours" name="dailyGoalHours" min="0" step="0.1" value="1" class="mt-1 block w-full px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeModal('setGoalModal')" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary bg-green-500 hover:bg-green-600">Set Goal</button> 
-                </div>
-            </form>
+        <!-- Motivational Tip/Quote Section -->
+        <div id="tipContainer" class="tip-box p-6 rounded-xl mb-12 max-w-3xl w-full">
+            <h3 class="text-xl font-bold mb-3 text-purple-200">Study Tip / Motivation</h3>
+            <p id="motivationalTip" class="text-lg md:text-xl"></p>
         </div>
-    </div>
 
-    <div id="shareSummaryModal" class="modal hidden fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center p-4 z-50">
-        <div class="summary-card relative">
-            <button onclick="closeModal('shareSummaryModal')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-3xl">&times;</button>
-            <div class="summary-card-header text-center">
-                <h2 class="text-3xl font-bold text-slate-800">Today's Study Summary</h2>
-                <p id="summaryDate" class="text-sm text-slate-500 mt-1"></p>
-            </div>
-            <div id="shareSummaryContent" class="space-y-4">
-                </div>
-            <div class="summary-card-footer text-center mt-5">
-                <p class="text-xl font-semibold text-slate-700">Total Time Today: <span id="summaryNetTime" class="font-bold text-sky-600"></span></p>
-                <p class="text-sm text-slate-500 mt-3">Fueling your JEE Dreams! <i class="fas fa-rocket text-sky-500"></i></p>
-            </div>
+        <!-- Countdown Containers - This will be dynamically populated -->
+        <div id="countdownsContainer" class="flex flex-col lg:flex-row justify-center items-stretch w-full gap-10 mb-12">
+            <!-- Countdowns will be rendered here by JavaScript -->
         </div>
+
+        <!-- Manage Countdowns Button (Moved below countdowns) -->
+        <button id="manageCountdownsBtn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition-transform duration-200 hover:scale-105">
+            Manage Countdowns
+        </button>
     </div>
 
-    <div id="easterEggMessage" class="easter-egg-message"></div>
-
-    <div id="imageEasterEggModal" class="modal hidden fixed inset-0 bg-slate-900 bg-opacity-70 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center p-4 z-[60]">
+    <!-- Add New Countdown Modal -->
+    <div id="addCountdownModal" class="modal-overlay">
         <div class="modal-content relative">
-            <button onclick="closeModal('imageEasterEggModal')" class="absolute top-2 right-3 text-slate-500 hover:text-slate-700 text-4xl font-light">&times;</button>
-            <img id="easterEggImageEl" src="" alt="Easter Egg Image" class="mt-2"/> 
-            <p class="text-sm text-slate-600 mt-2">Keep that focus!</p>
+            <button class="close-button" onclick="closeModal()">×</button>
+            <h2 class="text-3xl font-bold text-white mb-6 text-center">Add New Countdown</h2>
+            <div class="mb-4">
+                <label for="countdownName" class="block text-gray-300 text-sm font-bold mb-2">Event Name:</label>
+                <input type="text" id="countdownName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200" placeholder="e.g., Board Exams, College Applications">
+            </div>
+            <div class="mb-6">
+                <label for="countdownDate" class="block text-gray-300 text-sm font-bold mb-2">Target Date & Time:</label>
+                <input type="datetime-local" id="countdownDate" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200">
+            </div>
+            <div class="flex items-center justify-center">
+                <button id="saveCountdownBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition-colors duration-200">
+                    Add Countdown
+                </button>
+            </div>
         </div>
     </div>
-
-    <footer class="text-center py-8 mt-10 border-t border-slate-200">
-        <p class="text-sm text-slate-500">&copy; <span id="currentYear"></span> Study Tracker - JEE Edition.</p>
-        <p class="text-xs text-slate-400 mt-1">
-            Made by Shaurya Pratap Singh 
-            <a href="https://github.com/svalordev" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:text-sky-600 hover:underline">
-                (<i class="fab fa-github"></i> svalordev)
-            </a>
-        </p>
-    </footer>
 
     <script>
-        // --- Application State and Data ---
-        const APP_DATA_STORAGE_KEY = 'studyTrackerData_v4_jee'; 
-        const ACTIVE_TIMER_STORAGE_KEY = 'studyTrackerActiveTimer_v4_jee';
+        // Store countdown data and their intervals
+        let countdowns = [];
+        const countdownIntervals = {}; // To store setInterval IDs for each countdown
 
-        let appData = {
-            subjects: [
-                { id: 'physics', name: 'Physics', color: 'sky', goal: 60, loggedTime: [] }, 
-                { id: 'chemistry', name: 'Chemistry', color: 'emerald', goal: 60, loggedTime: [] },
-                { id: 'maths', name: 'Maths', color: 'violet', goal: 60, loggedTime: [] }
-            ]
+        // Default JEE exam dates
+        const defaultJeeMain = {
+            id: 'jeeMain',
+            name: 'JEE Main 2026',
+            targetDate: new Date("Jan 22, 2026 09:00:00").getTime(),
+            colorClass: 'text-blue-300' // Custom color class for styling
+        };
+        const defaultJeeAdvanced = {
+            id: 'jeeAdvanced',
+            name: 'JEE Advanced 2026',
+            targetDate: new Date("May 18, 2026 09:00:00").getTime(),
+            colorClass: 'text-red-300' // Custom color class for styling
         };
 
-        let activeTimer = {
-            subjectId: null, startTime: null, intervalId: null, display: "00:00:00"
-        };
+        // Motivational Quotes and Study Tips
+        const tipsAndQuotes = [
+            { type: 'quote', text: "The only way to do great work is to love what you do. – Steve Jobs" },
+            { type: 'tip', minDays: 300, text: "It's a long journey! Start building strong fundamentals in Physics, Chemistry, and Math. Consistency is key." },
+            { type: 'tip', minDays: 200, text: "Begin solving problems regularly. Focus on understanding concepts through practice, not just memorization." },
+            { type: 'quote', text: "Success is not final, failure is not fatal: it is the courage to continue that counts. – Winston Churchill" },
+            { type: 'tip', minDays: 150, text: "Start taking mock tests periodically. Analyze your mistakes and work on your weak areas." },
+            { type: 'tip', minDays: 90, text: "Intensify your revision. Make short notes for quick review of formulas and key concepts." },
+            { type: 'quote', text: "Believe you can and you're halfway there. – Theodore Roosevelt" },
+            { type: 'tip', minDays: 60, text: "Focus on time management during mock tests. Practice solving papers within the time limit." },
+            { type: 'tip', minDays: 30, text: "Prioritize high-weightage topics. Don't start new topics; solidify what you already know." },
+            { type: 'quote', text: "The future belongs to those who believe in the beauty of their dreams. – Eleanor Roosevelt" },
+            { type: 'tip', minDays: 15, text: "Avoid stress. Get enough sleep and eat healthy. A calm mind performs best." },
+            { type: 'tip', minDays: 7, text: "Review your short notes and formulas. Stay confident and trust your preparation." },
+            { type: 'quote', text: "Don't watch the clock; do what it does. Keep going. – Sam Levenson" },
+            { type: 'tip', minDays: 0, text: "It's almost here! Stay calm, revise key points, and visualize success. You've got this!" }
+        ];
 
-        // --- DOM Elements ---
-        const subjectsContainer = document.getElementById('subjectsContainer');
-        const setGoalModal = document.getElementById('setGoalModal');
-        const setGoalForm = document.getElementById('setGoalForm');
-        const setGoalSubjectName = document.getElementById('setGoalSubjectName');
-        const setGoalSubjectIdInput = document.getElementById('setGoalSubjectId');
-        const dailyGoalHoursInput = document.getElementById('dailyGoalHours');
-        const netTimeTodayDisplay = document.getElementById('netTimeTodayDisplay');
-        const openShareSummaryBtn = document.getElementById('openShareSummaryBtn');
-        const shareSummaryModal = document.getElementById('shareSummaryModal');
-        const shareSummaryContent = document.getElementById('shareSummaryContent');
-        const summaryDateElement = document.getElementById('summaryDate');
-        const summaryNetTimeElement = document.getElementById('summaryNetTime');
-        const mainTitle = document.getElementById('mainTitle'); 
-        const easterEggMessageDiv = document.getElementById('easterEggMessage');
-        const imageEasterEggModal = document.getElementById('imageEasterEggModal'); 
-        const easterEggImageEl = document.getElementById('easterEggImageEl'); 
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-        // --- Color Themes for Subjects (Tailwind v3 classes) ---
-        const subjectThemes = {
-            physics: { name: 'Physics', baseColor: 'sky', icon: 'fas fa-atom', textColor: 'text-sky-600', bgColor: 'bg-sky-500', lightBgColor: 'bg-sky-100', borderColor: 'border-sky-300', ringColor: 'focus:ring-sky-500', buttonBg: 'bg-sky-500', buttonHoverBg: 'hover:bg-sky-600' },
-            chemistry: { name: 'Chemistry', baseColor: 'emerald', icon: 'fas fa-flask-vial', textColor: 'text-emerald-600', bgColor: 'bg-emerald-500', lightBgColor: 'bg-emerald-100', borderColor: 'border-emerald-300', ringColor: 'focus:ring-emerald-500', buttonBg: 'bg-emerald-500', buttonHoverBg: 'hover:bg-emerald-600' },
-            maths: { name: 'Maths', baseColor: 'violet', icon: 'fas fa-calculator', textColor: 'text-violet-600', bgColor: 'bg-violet-500', lightBgColor: 'bg-violet-100', borderColor: 'border-violet-300', ringColor: 'focus:ring-violet-500', buttonBg: 'bg-violet-500', buttonHoverBg: 'hover:bg-violet-600' }
-        };
-         appData.subjects.forEach(s => { 
-            if (s.color === 'blue') s.color = 'sky';
-            if (s.color === 'green') s.color = 'emerald';
-            if (s.color === 'purple') s.color = 'violet';
-        });
-
+        let currentTipIndex = 0;
+        const tipElement = document.getElementById('motivationalTip');
+        const tipContainer = document.getElementById('tipContainer');
+        const countdownsContainer = document.getElementById('countdownsContainer');
+        const addCountdownModal = document.getElementById('addCountdownModal');
+        const manageCountdownsBtn = document.getElementById('manageCountdownsBtn');
+        const saveCountdownBtn = document.getElementById('saveCountdownBtn');
+        const countdownNameInput = document.getElementById('countdownName');
+        const countdownDateInput = document.getElementById('countdownDate');
 
         // --- Utility Functions ---
-        function loadData() {
-            try {
-                const storedAppData = localStorage.getItem(APP_DATA_STORAGE_KEY);
-                if (storedAppData) {
-                    appData = JSON.parse(storedAppData);
-                    appData.subjects = appData.subjects.map(s => ({
-                        id: s.id,
-                        name: s.name || subjectThemes[s.id]?.name || 'Unknown Subject',
-                        color: subjectThemes[s.id] ? s.color : 'sky',
-                        goal: (s.goal === undefined || s.goal === 0 || isNaN(Number(s.goal))) ? 60 : Number(s.goal),
-                        loggedTime: Array.isArray(s.loggedTime) ? s.loggedTime : []
-                    }));
-                    appData.subjects.forEach(s => {
-                        if (s.color === 'blue') s.color = 'sky';
-                        if (s.color === 'green') s.color = 'emerald';
-                        if (s.color === 'purple') s.color = 'violet';
-                     });
 
-                } else {
-                    saveAppData(); 
-                }
-            } catch (e) {
-                console.error("Error parsing appData from localStorage. Resetting to defaults.", e);
-                appData = {
-                    subjects: [
-                        { id: 'physics', name: 'Physics', color: 'sky', goal: 60, loggedTime: [] }, 
-                        { id: 'chemistry', name: 'Chemistry', color: 'emerald', goal: 60, loggedTime: [] },
-                        { id: 'maths', name: 'Maths', color: 'violet', goal: 60, loggedTime: [] }
-                    ]
-                };
-                saveAppData();
-            }
-
-            try {
-                const storedTimerState = localStorage.getItem(ACTIVE_TIMER_STORAGE_KEY);
-                if (storedTimerState) {
-                    const parsedTimerState = JSON.parse(storedTimerState);
-                    if (parsedTimerState && parsedTimerState.subjectId && parsedTimerState.startTime) {
-                        activeTimer.subjectId = parsedTimerState.subjectId;
-                        activeTimer.startTime = Number(parsedTimerState.startTime); 
-
-                        if (!isNaN(activeTimer.startTime) && activeTimer.startTime > 0) {
-                            startTimerInterval(activeTimer.subjectId, true);
-                        } else {
-                            console.warn("Corrupted startTime in localStorage, clearing active timer state.");
-                            activeTimer = { subjectId: null, startTime: null, intervalId: null, display: "00:00:00" };
-                            saveActiveTimerState();
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Error parsing activeTimerState from localStorage. Resetting timer state.", e);
-                activeTimer = { subjectId: null, startTime: null, intervalId: null, display: "00:00:00" };
-                saveActiveTimerState();
-            }
+        // Generates a unique ID
+        function generateUniqueId() {
+            return 'countdown-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         }
 
-
-        function saveAppData() {
-            localStorage.setItem(APP_DATA_STORAGE_KEY, JSON.stringify(appData));
+        // Saves countdowns to local storage
+        function saveCountdowns() {
+            localStorage.setItem('jeeCountdowns', JSON.stringify(countdowns));
         }
 
-        function saveActiveTimerState() {
-            localStorage.setItem(ACTIVE_TIMER_STORAGE_KEY, JSON.stringify({
-                subjectId: activeTimer.subjectId,
-                startTime: activeTimer.startTime 
-            }));
-        }
-
-        function formatTime(totalMinutes) {
-            if (totalMinutes < 1) return "0m"; 
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = Math.round(totalMinutes % 60); 
-            let result = "";
-            if (hours > 0) result += `${hours}h `;
-            if (minutes > 0 || hours === 0) result += `${minutes}m`;
-            return result.trim() || "0m";
-        }
-
-        function formatMinutesToHHMMSS(totalMinutes) {
-            if (totalMinutes <= 0) return "00:00:00";
-            const totalSeconds = Math.round(totalMinutes * 60); 
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        function formatTimerDisplay(ms) {
-            if (ms <= 0) return "00:00:00";
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        function getDailyStudiedMinutes(subjectId) {
-            const subject = appData.subjects.find(s => s.id === subjectId);
-            if (!subject) return 0;
-            const todayStr = new Date().toISOString().slice(0, 10);
-            return subject.loggedTime.reduce((total, log) => {
-                if (log.date === todayStr) return total + log.duration;
-                return total;
-            }, 0);
-        }
-
-        function getNetTimeStudiedToday() {
-            let totalMinutesToday = 0;
-            const todayStr = new Date().toISOString().slice(0, 10);
-            appData.subjects.forEach(subject => {
-                subject.loggedTime.forEach(log => {
-                    if (log.date === todayStr) totalMinutesToday += log.duration;
+        // Loads countdowns from local storage
+        function loadCountdowns() {
+            const storedCountdowns = localStorage.getItem('jeeCountdowns');
+            if (storedCountdowns) {
+                countdowns = JSON.parse(storedCountdowns);
+                // Convert targetDate strings back to numbers
+                countdowns.forEach(c => {
+                    c.targetDate = new Date(c.targetDate).getTime();
+                    // Re-calculate initialDistance as it's time-dependent
+                    c.initialDistance = c.targetDate - new Date().getTime();
                 });
-            });
-            return totalMinutesToday;
-        }
-        
-        function showCustomMessage(text, type = 'success') {
-            easterEggMessageDiv.textContent = text;
-            easterEggMessageDiv.className = 'easter-egg-message'; 
-            if (type === 'success') {
-                easterEggMessageDiv.classList.add('bg-emerald-500', 'text-white');
-            } else if (type === 'error') {
-                easterEggMessageDiv.classList.add('bg-red-500', 'text-white');
-            } else { 
-                easterEggMessageDiv.classList.add('bg-amber-400', 'text-amber-900');
+            } else {
+                // If no stored countdowns, use defaults
+                countdowns = [defaultJeeMain, defaultJeeAdvanced];
+                // Calculate initial distances for defaults
+                countdowns.forEach(c => {
+                    c.initialDistance = c.targetDate - new Date().getTime();
+                });
+                saveCountdowns(); // Save defaults
             }
-            easterEggMessageDiv.classList.add('show');
+        }
+
+        // --- Modal Functions ---
+        function showModal() {
+            addCountdownModal.classList.add('show');
+            // Set default date to a future date for convenience
+            const now = new Date();
+            now.setDate(now.getDate() + 7); // 7 days from now
+            now.setHours(9, 0, 0, 0); // 9 AM
+            countdownDateInput.value = now.toISOString().slice(0, 16);
+        }
+
+        function closeModal() {
+            addCountdownModal.classList.remove('show');
+            countdownNameInput.value = '';
+            countdownDateInput.value = '';
+        }
+
+        // --- Countdown Logic ---
+
+        // Function to update a single countdown timer and its progress bar
+        function updateCountdown(countdownItem) {
+            const now = new Date().getTime();
+            const distance = countdownItem.targetDate - now;
+
+            // Calculate time components
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Get elements by their IDs
+            const daysElement = document.getElementById(`${countdownItem.id}Days`);
+            const hoursElement = document.getElementById(`${countdownItem.id}Hours`);
+            const minutesElement = document.getElementById(`${countdownItem.id}Minutes`);
+            const secondsElement = document.getElementById(`${countdownItem.id}Seconds`);
+            const progressBarElement = document.getElementById(`${countdownItem.id}ProgressBar`);
+
+            if (!daysElement || !hoursElement || !minutesElement || !secondsElement || !progressBarElement) {
+                // If elements don't exist (e.g., countdown was removed), clear its interval
+                if (countdownIntervals[countdownItem.id]) {
+                    clearInterval(countdownIntervals[countdownItem.id]);
+                    delete countdownIntervals[countdownItem.id];
+                }
+                return;
+            }
+
+            // Apply pulse animation if seconds change
+            if (secondsElement.innerHTML !== String(Math.max(0, seconds)).padStart(2, '0')) {
+                [daysElement, hoursElement, minutesElement, secondsElement].forEach(el => {
+                    el.style.animation = 'none';
+                    void el.offsetWidth; // Trigger reflow
+                    el.style.animation = '';
+                });
+            }
+
+            // Display the result in the respective elements, ensuring two digits
+            daysElement.innerHTML = String(Math.max(0, days)).padStart(2, '0');
+            hoursElement.innerHTML = String(Math.max(0, hours)).padStart(2, '0');
+            minutesElement.innerHTML = String(Math.max(0, minutes)).padStart(2, '0');
+            secondsElement.innerHTML = String(Math.max(0, seconds)).padStart(2, '0');
+
+            // Update progress bar
+            let percentage = 0;
+            if (countdownItem.initialDistance > 0) {
+                percentage = ((countdownItem.initialDistance - distance) / countdownItem.initialDistance) * 100;
+                percentage = Math.min(100, Math.max(0, percentage)); // Clamp between 0 and 100
+            } else {
+                percentage = 100; // If initial distance was 0 or negative, it's already passed
+            }
+            progressBarElement.style.width = percentage + '%';
+
+            // If the countdown is over, display a message
+            if (distance < 0) {
+                clearInterval(countdownIntervals[countdownItem.id]);
+                delete countdownIntervals[countdownItem.id];
+                document.getElementById(`${countdownItem.id}`).querySelector('h2').innerText = `${countdownItem.name} Passed!`;
+                document.getElementById(`${countdownItem.id}`).classList.add('opacity-50'); // Dim passed exam
+                progressBarElement.style.width = '100%'; // Ensure progress bar is full
+            }
+        }
+
+        // Renders all countdowns from the 'countdowns' array
+        function renderCountdowns() {
+            // Clear existing intervals and content
+            for (const id in countdownIntervals) {
+                clearInterval(countdownIntervals[id]);
+            }
+            countdownsContainer.innerHTML = ''; // Clear existing HTML
+
+            countdowns.forEach(countdown => {
+                const countdownBox = document.createElement('div');
+                countdownBox.id = countdown.id;
+                countdownBox.className = `countdown-box p-10 rounded-3xl flex flex-col items-center justify-between flex-1 min-w-[320px] relative`; // Added relative for remove button positioning
+
+                countdownBox.innerHTML = `
+                    <button class="remove-btn" data-id="${countdown.id}">×</button>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-8 text-center ${countdown.colorClass || 'text-white'}">
+                        ${countdown.name}
+                    </h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-8 w-full text-center">
+                        <div class="flex flex-col items-center">
+                            <span id="${countdown.id}Days" class="countdown-value text-6xl md:text-7xl">00</span>
+                            <span class="countdown-label text-base uppercase tracking-widest mt-3">Days</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span id="${countdown.id}Hours" class="countdown-value text-6xl md:text-7xl">00</span>
+                            <span class="countdown-label text-base uppercase tracking-widest mt-3">Hours</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span id="${countdown.id}Minutes" class="countdown-value text-6xl md:text-7xl">00</span>
+                            <span class="countdown-label text-base uppercase tracking-widest mt-3">Minutes</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span id="${countdown.id}Seconds" class="countdown-value text-6xl md:text-7xl">00</span>
+                            <span class="countdown-label text-base uppercase tracking-widest mt-3">Seconds</span>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div id="${countdown.id}ProgressBar" class="progress-bar"></div>
+                    </div>
+                `;
+                countdownsContainer.appendChild(countdownBox);
+
+                // Attach event listener for the remove button
+                countdownBox.querySelector('.remove-btn').addEventListener('click', (event) => {
+                    const idToRemove = event.target.dataset.id;
+                    removeCountdown(idToRemove);
+                });
+
+                // Start updating this specific countdown
+                countdownIntervals[countdown.id] = setInterval(() => updateCountdown(countdown), 1000);
+                // Initial update to display values immediately
+                updateCountdown(countdown);
+            });
+        }
+
+        // Adds a new countdown
+        function addCountdown() {
+            const name = countdownNameInput.value.trim();
+            const dateString = countdownDateInput.value;
+
+            if (!name || !dateString) {
+                // Using a simple message for user feedback instead of alert()
+                console.warn("Please enter both event name and date/time.");
+                // In a real app, you'd show a custom modal message here
+                return;
+            }
+
+            const targetDate = new Date(dateString).getTime();
+            if (isNaN(targetDate)) {
+                console.warn("Invalid date/time format.");
+                return;
+            }
+
+            const newCountdown = {
+                id: generateUniqueId(),
+                name: name,
+                targetDate: targetDate,
+                initialDistance: targetDate - new Date().getTime(),
+                colorClass: 'text-green-300' // Default color for new countdowns
+            };
+
+            countdowns.push(newCountdown);
+            saveCountdowns();
+            renderCountdowns();
+            closeModal();
+        }
+
+        // Removes a countdown
+        function removeCountdown(id) {
+            // Clear its interval first
+            if (countdownIntervals[id]) {
+                clearInterval(countdownIntervals[id]);
+                delete countdownIntervals[id];
+            }
+
+            // Remove from the array
+            countdowns = countdowns.filter(c => c.id !== id);
+            saveCountdowns();
+            renderCountdowns(); // Re-render to reflect changes
+        }
+
+        // --- Motivational Tip Logic ---
+        function displayNextTip() {
+            tipContainer.classList.remove('fade-in'); // Start fade out
             setTimeout(() => {
-                easterEggMessageDiv.classList.remove('show');
-            }, 3000);
-        }
+                const now = new Date().getTime();
+                let closestExamDays = Infinity;
 
-
-        // --- Rendering Functions ---
-        function renderNetTimeToday() {
-            if (netTimeTodayDisplay) {
-                const totalMinutes = getNetTimeStudiedToday();
-                netTimeTodayDisplay.textContent = formatMinutesToHHMMSS(totalMinutes); 
-            }
-        }
-
-        function renderSubjectCards() {
-            subjectsContainer.innerHTML = ''; 
-            appData.subjects.forEach(subject => {
-                const theme = subjectThemes[subject.id] || subjectThemes.physics; 
-                const dailyMinutesStudied = getDailyStudiedMinutes(subject.id);
-                const goalMinutes = subject.goal;
-                const progressPercent = goalMinutes > 0 ? Math.min((dailyMinutesStudied / goalMinutes) * 100, 100) : 0;
-
-                const card = document.createElement('div');
-                card.className = `bg-white p-5 rounded-xl shadow-lg border border-slate-200 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:border-slate-300`;
-                
-                const isThisTimerActive = activeTimer.subjectId === subject.id;
-                const timerDisplayValue = isThisTimerActive ? activeTimer.display : "00:00:00";
-                const isAnotherTimerActive = activeTimer.subjectId !== null && activeTimer.subjectId !== subject.id;
-
-                card.innerHTML = `
-                    <div>
-                        <h3 class="text-2xl font-bold ${theme.textColor} mb-3 flex items-center"><i class="${theme.icon} mr-3 text-2xl opacity-80"></i>${theme.name}</h3>
-                        <p class="text-sm text-slate-500 mb-1">
-                            Daily Goal: <span class="font-semibold ${theme.textColor}">${formatTime(goalMinutes)}</span>
-                        </p>
-                        <p class="text-sm text-slate-500 mb-4">
-                            Studied Today: <span class="font-semibold ${theme.textColor}">${formatTime(dailyMinutesStudied)}</span>
-                        </p>
-                        <div class="w-full progress-bar-bg rounded-full h-3 mb-1">
-                            <div class="progress-bar-fill h-3 rounded-full ${theme.bgColor}" style="width: ${progressPercent}%"></div>
-                        </div>
-                        <p class="text-xs text-slate-400 text-right mb-5">${Math.round(progressPercent)}% Complete</p>
-                        <div class="text-3xl font-semibold ${theme.textColor} my-4 text-center tracking-wider" id="timerDisplay-${subject.id}">
-                            ${timerDisplayValue}
-                        </div>
-                    </div>
-                    <div class="mt-auto grid grid-cols-2 gap-3">
-                        ${
-                            isThisTimerActive
-                            ? `<button onclick="stopTimer('${subject.id}')" class="btn btn-danger w-full col-span-2">
-                                    <i class="fas fa-stop-circle mr-2"></i>Stop Timer
-                                </button>`
-                            : `<button onclick="startTimer('${subject.id}')" class="btn btn-primary ${theme.buttonBg} ${theme.buttonHoverBg} w-full col-span-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        ${isAnotherTimerActive ? 'disabled' : ''}>
-                                    <i class="fas fa-play-circle mr-2"></i>Start Timer
-                                </button>`
+                // Find the closest active exam to determine relevant tip
+                countdowns.forEach(c => {
+                    const distance = c.targetDate - now;
+                    if (distance > 0) { // Only consider future exams
+                        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        if (days < closestExamDays) {
+                            closestExamDays = days;
                         }
-                        <button onclick="openSetGoalModal('${subject.id}')" 
-                                class="btn btn-secondary w-full col-span-2 mt-2">
-                            <i class="fas fa-bullseye mr-2"></i>Set Goal
-                        </button>
-                    </div>
-                `;
-                subjectsContainer.appendChild(card);
-            });
-            renderNetTimeToday();
-        }
-
-        // --- Timer Functions ---
-        window.startTimer = function(subjectId) {
-            if (activeTimer.intervalId) {
-                showCustomMessage("Another timer is already active. Stop it first.", "error");
-                return;
-            }
-            activeTimer.subjectId = subjectId;
-            activeTimer.startTime = Date.now();
-            activeTimer.display = "00:00:00"; 
-            startTimerInterval(subjectId);
-            saveActiveTimerState();
-            renderSubjectCards(); 
-        }
-
-        function startTimerInterval(currentSubjectId, isResuming = false) {
-            if (activeTimer.intervalId) {
-                clearInterval(activeTimer.intervalId);
-            }
-
-            activeTimer.intervalId = setInterval(() => {
-                if (!activeTimer.startTime || isNaN(activeTimer.startTime) || activeTimer.startTime <=0 ) { 
-                     console.error("Timer interval: Invalid startTime for", currentSubjectId, "startTime:", activeTimer.startTime);
-                     stopTimer(currentSubjectId, true); 
-                     return;
-                }
-
-                const elapsedMs = Date.now() - activeTimer.startTime;
-                if (elapsedMs < 0) { 
-                    console.warn("Elapsed milliseconds is negative for " + currentSubjectId + ". startTime might be in the future or system clock changed.", "elapsedMs:", elapsedMs, "startTime:", activeTimer.startTime);
-                    activeTimer.display = "00:00:00"; 
-                } else {
-                    activeTimer.display = formatTimerDisplay(elapsedMs);
-                }
-                
-                const timerDisplayElement = document.getElementById(`timerDisplay-${currentSubjectId}`);
-                if (timerDisplayElement) {
-                    timerDisplayElement.textContent = activeTimer.display;
-                } else {
-                    console.warn(`Timer display element 'timerDisplay-${currentSubjectId}' not found during interval update.`);
-                }
-            }, 1000);
-        }
-
-
-        window.stopTimer = function(subjectId, silentStop = false) {
-            if (activeTimer.subjectId !== subjectId) {
-                console.warn(`stopTimer called for ${subjectId}, but active timer is for ${activeTimer.subjectId || 'none'}.`);
-                if(activeTimer.intervalId) clearInterval(activeTimer.intervalId);
-                if(!activeTimer.subjectId && activeTimer.intervalId) activeTimer.intervalId = null;
-                return; 
-            }
-            if (!activeTimer.intervalId && !silentStop) { 
-                console.warn(`stopTimer called for ${subjectId}, but no active intervalId found.`);
-            }
-
-            if(activeTimer.intervalId) clearInterval(activeTimer.intervalId);
-            const elapsedMs = activeTimer.startTime ? (Date.now() - activeTimer.startTime) : 0;
-            
-            if (!silentStop) {
-                const totalMinutes = Math.floor(elapsedMs / (1000 * 60)); 
-                const subjectInfo = appData.subjects.find(s => s.id === subjectId);
-                if (subjectInfo) { 
-                    if (totalMinutes > 0) {
-                        const today = new Date().toISOString().slice(0, 10);
-                        subjectInfo.loggedTime.push({ date: today, duration: totalMinutes });
-                        saveAppData(); 
-                        showCustomMessage(`${formatTime(totalMinutes)} logged for ${subjectInfo.name}!`, 'success');
-                    } else {
-                         showCustomMessage(`Timer stopped. No full minute logged for ${subjectInfo.name}.`, 'success');
-                    }
-                } else {
-                    console.error(`Could not find subject with ID ${subjectId} to log time.`);
-                }
-            }
-            activeTimer = { subjectId: null, startTime: null, intervalId: null, display: "00:00:00" };
-            saveActiveTimerState();
-            renderSubjectCards();
-        }
-
-        // --- Modal Handling ---
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.remove('hidden');
-                if (modalId === 'shareSummaryModal') renderShareSummaryContent();
-                if (modalId === 'setGoalModal') {
-                     const subjectId = setGoalSubjectIdInput.value;
-                     const subject = appData.subjects.find(s => s.id === subjectId);
-                     const theme = subject ? subjectThemes[subject.id] : null;
-                     if (theme) {
-                        setGoalSubjectName.textContent = theme.name;
-                        setGoalSubjectName.className = `font-bold ${theme.textColor}`;
-                     } else if (subject) {
-                        setGoalSubjectName.textContent = subject.name; 
-                        setGoalSubjectName.className = `font-bold text-slate-700`;
-                     }
-                }
-            }
-        }
-
-        window.closeModal = function(modalId) { 
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.add('hidden');
-        }
-
-        window.openSetGoalModal = function(subjectId) {
-            const subject = appData.subjects.find(s => s.id === subjectId);
-            if (!subject) return;
-            setGoalSubjectIdInput.value = subjectId; 
-            dailyGoalHoursInput.value = subject.goal > 0 ? (subject.goal / 60).toFixed(1) : 1; 
-            openModal('setGoalModal'); 
-            dailyGoalHoursInput.focus();
-        }
-
-        function renderShareSummaryContent() {
-            const today = new Date();
-            summaryDateElement.textContent = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            shareSummaryContent.innerHTML = ''; 
-
-            appData.subjects.forEach(subjectData => {
-                const theme = subjectThemes[subjectData.id] || subjectThemes.physics; 
-                const minutesStudied = getDailyStudiedMinutes(subjectData.id);
-
-                const subjectDiv = document.createElement('div');
-                subjectDiv.className = `flex items-center justify-between py-3 px-4 ${theme.lightBgColor} rounded-lg border ${theme.borderColor}`;
-                subjectDiv.innerHTML = `
-                    <span class="flex items-center">
-                        <i class="${theme.icon} ${theme.textColor} mr-3 text-xl"></i>
-                        <span class="font-semibold text-slate-700 text-lg">${theme.name}</span>
-                    </span>
-                    <span class="font-bold text-lg ${minutesStudied > 0 ? theme.textColor : 'text-slate-500'}">${formatTime(minutesStudied)}</span>
-                `;
-                shareSummaryContent.appendChild(subjectDiv);
-            });
-            summaryNetTimeElement.textContent = formatTime(getNetTimeStudiedToday()); 
-            summaryNetTimeElement.className = `font-extrabold text-2xl ${getNetTimeStudiedToday() > 0 ? 'text-sky-600' : 'text-slate-500'}`;
-        }
-        
-        // --- Event Listeners & Easter Eggs ---
-        setGoalForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const subjectId = setGoalSubjectIdInput.value;
-            const goalHours = parseFloat(dailyGoalHoursInput.value);
-
-            if (isNaN(goalHours) || goalHours < 0) {
-                showCustomMessage("Please enter a valid non-negative number for the daily goal.", "error");
-                return;
-            }
-            const subject = appData.subjects.find(s => s.id === subjectId);
-            const themeName = subject ? (subjectThemes[subject.id]?.name || subject.name) : "Subject";
-            if (subject) {
-                subject.goal = Math.round(goalHours * 60);
-                saveAppData();
-                renderSubjectCards();
-                closeModal('setGoalModal');
-                showCustomMessage(`Daily goal for ${themeName} set to ${formatTime(subject.goal)}.`, 'success');
-            } else {
-                showCustomMessage("Error: Subject not found setting goal.", "error");
-            }
-        });
-        
-        openShareSummaryBtn.addEventListener('click', () => openModal('shareSummaryModal'));
-
-        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-        let konamiIndex = 0;
-        
-        function showImageEasterEgg() {
-            if (easterEggImageEl) { 
-                easterEggImageEl.src = `https://memes.co.in/Uploads/Media/Jan24/Wed31/1031/a3f49a13.jpg`; 
-                openModal('imageEasterEggModal');
-                setTimeout(() => {
-                    closeModal('imageEasterEggModal');
-                }, 3500); 
-            } else {
-                console.error("easterEggImageEl not found for image easter egg.");
-            }
-        }
-
-        document.addEventListener('keydown', function(event) {
-            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return; 
-
-            if (event.key.toLowerCase() === konamiCode[konamiIndex].toLowerCase()) {
-                konamiIndex++;
-                if (konamiIndex === konamiCode.length) {
-                    showCustomMessage('🚀 To the IITs! Keep pushing! 🚀', 'easter');
-                    konamiIndex = 0; 
-                }
-            } else if (event.key.length === 1 || event.key.startsWith("Arrow")) { 
-                konamiIndex = 0; 
-            }
-
-            if (event.key === 'Escape') {
-                if (!setGoalModal.classList.contains('hidden')) closeModal('setGoalModal');
-                if (!shareSummaryModal.classList.contains('hidden')) closeModal('shareSummaryModal');
-                if (!imageEasterEggModal.classList.contains('hidden')) closeModal('imageEasterEggModal'); 
-            }
-        });
-        
-        // --- Initialization ---
-        function initializeApp() {
-            loadData(); 
-            renderSubjectCards();
-
-            let titleClickCount = 0;
-            if (mainTitle) { 
-                mainTitle.addEventListener('click', () => {
-                    titleClickCount++;
-                    if (titleClickCount === 3) { 
-                        showImageEasterEgg();    
-                        titleClickCount = 0;     
                     }
                 });
-            } else {
-                console.error("mainTitle element not found, title click easter egg will not work.");
-            }
-        }
-        
-        console.log("Hey there, future engineer/scientist! 👋 Keep up the hard work. Your dedication is inspiring!");
-        document.addEventListener('DOMContentLoaded', initializeApp);
 
+                let relevantTip = null;
+                // Iterate through tips in reverse to find the most specific one
+                for (let i = tipsAndQuotes.length - 1; i >= 0; i--) {
+                    const item = tipsAndQuotes[i];
+                    if (item.type === 'tip' && closestExamDays <= item.minDays) {
+                        relevantTip = item.text;
+                        break;
+                    }
+                }
+
+                // If no specific tip, rotate through general quotes
+                if (!relevantTip) {
+                    const generalQuotes = tipsAndQuotes.filter(item => item.type === 'quote');
+                    if (generalQuotes.length > 0) {
+                        tipElement.innerText = generalQuotes[currentTipIndex % generalQuotes.length].text;
+                        currentTipIndex++;
+                    } else {
+                        tipElement.innerText = "Keep working hard, your efforts will pay off!";
+                    }
+                } else {
+                    tipElement.innerText = relevantTip;
+                }
+
+                tipContainer.classList.add('fade-in'); // Fade in new tip/quote
+            }, 1000); // Wait for fade-out to complete before changing text
+        }
+
+        // --- Event Listeners and Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCountdowns(); // Load existing or default countdowns
+            renderCountdowns(); // Display them
+
+            displayNextTip(); // Display first tip/quote immediately
+            setInterval(displayNextTip, 10000); // Change tip/quote every 10 seconds
+
+            manageCountdownsBtn.addEventListener('click', showModal);
+            saveCountdownBtn.addEventListener('click', addCountdown);
+            // Close modal if clicking outside content (optional, but good UX)
+            addCountdownModal.addEventListener('click', (event) => {
+                if (event.target === addCountdownModal) {
+                    closeModal();
+                }
+            });
+        });
     </script>
 </body>
 </html>
